@@ -3,99 +3,47 @@ from __future__ import unicode_literals
 
 from django.shortcuts import render
 from django.http import JsonResponse
-from models import DetectResult
+from api.models import DetectResult
 from datetime import datetime
-from helpers import *
+from api.helpers import *
 import json
 
 '''
-/api/digests
-Supported HTTP types -> [GET]
+/api/detections
+Supported HTTP types -> [POST, PUT]
 
-This api is used for querying related DetectResult items given
-a query request.
+This api is used for NLP service to submit new detection results to 
+backend systems or updated results for existed entries.
+POST to create new entries.
+PUT to update existing entries.
 
 Request JSON format:
-    app_name:       Name of the app
-    manager_name:   Name of the manager
-    corp_sector:    Corporation sector it belongs to
-    business:       Business department it belongs to
+    app_name:       string          name of the app
+    manager_name:   string          name of the manager
+    corp_sector:    string          corporation sector it belongs to
+    business:       string          business department it belongs to
+    detected:       boolean         whether this app contains PII
+    result:         dict of records detection results
 
-Return:
-    A JSON which is in following format:
-    {
-        "digest": [record_0, record_1, ...] -> a list of records
-    }
-    where a record is in following format:
-    {
-        "app_name":     string
-        "manager_name": string
-        "corp_sector":  string
-        "business":     string
-        "detected":     boolean
-        "last_updated": date_string
-        "result":       a dict of detected columns
-    }
-    An example of record["result"] can be:
+    where a typical `result` looks like this:
     {
         "col47":    ["Ssn", "Race"],
         "nameCol":  ["Name", "Gender"]
     }
+
+Return:
+    A JSON which contains execution information.
+    If it succeeds, following JSON will return:
+    {
+        "status": "ok"
+    }
+    Or an error JSON will return:
+    {
+        "status": "error",
+        "reason": "reason of failure"
+    }
+
 '''
-def rest_digest(request):
-
-    if request.method != 'GET':
-        return JsonResponse(error_response('Only supports GET.'), 
-                            status=403)
-    # Only supports GET
-
-    app_name = request.GET.get('app_name')
-    manager_name = request.GET.get('manager_name')
-    corp_sector = regularize_str(request.GET.get('corp_sector'))
-    business = regularize_str(request.GET.get('business'))
-
-    queryset = None
-    if corp_sector and business:
-        queryset = DetectResult.objects(corp_sector=corp_sector,
-                                        business=business)
-    # Department filtering
-    
-    query_term = app_name if app_name else None
-    if manager_name:
-        if query_term: query_term += ' ' + manager_name
-        else:    query_term = manager_name
-    # Concatenate app_name and manager_name as query_term
-    
-    if queryset:
-        queryset = queryset.search_text(query_term).order_by('$text_score')
-    else:
-        queryset = DetectResult.objects.search_text(query_term).order_by('$text_score')
-    # Text search
-
-    resp_data = dict()
-    resp_data['digest'] = []
-    for res in queryset:
-        item = dict()
-        item['app_name'] = res.app_name
-        item['manager_name'] = res.manager_name
-        item['corp_sector'] = res.corp_sector
-        item['business'] = res.business
-        item['detected'] = res.detected
-        item['result'] = res.result
-        item['last_updated'] = res.last_updated
-        resp_data['digest'].append(item)
-    # Load info into JSON
-    
-    return JsonResponse(resp_data, status=200)
-
-
-
-    
-
-def rest_report(request):
-    pass
-
-# detections -> [POST, PUT]
 def rest_detection(request):
 
     if request.method not in ['POST', 'PUT']:
@@ -143,7 +91,7 @@ def rest_detection(request):
         res.business = business
         res.identifier = identifier
         res.detected = detected
-        res.result = result
+        res.result = result if detected else []
         res.last_updated = last_updated
         # New instance
         
@@ -164,7 +112,7 @@ def rest_detection(request):
         
         res = items.first()
         res.detected = detected
-        res.result = result
+        res.result = result if detected else []
         res.last_updated = last_updated
         # Update detected and result
 

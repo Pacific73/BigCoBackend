@@ -45,12 +45,10 @@ class DetectResult(Document):
     }
 
 class Category(Document):
-    corp_sector = StringField(max_length=512, required=True)
-    business = ListField(field=StringField(max_length=100), required=True)
+    business = StringField(max_length=512, required=True, unique=True)
+    corp_sector = ListField(field=StringField(max_length=100), required=True)
 
     meta = {
         'collection': 'Category',
-        'indexes': [
-            ('business', 'corp_sector')
-        ]
+        'indexes': ['business']
     }

@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.shortcuts import render
 from django.http import JsonResponse
-from api.models import DetectResult
+from api.models import DetectResult, Category
 from datetime import datetime
 from api.helpers import *
 import json
@@ -66,7 +65,7 @@ def rest_detection(request):
     identifier = get_identifier([app_name, manager_name, corp_sector, business])
     # Get regularized strings and identifier
 
-    last_updated = datetime.utcnow()
+    last_updated = datetime.now()
     detected = data.get('detected')
     result = data.get('result', [])
     # Get detected and result
@@ -123,6 +122,17 @@ def rest_detection(request):
             return JsonResponse(error_response('Wrong format of some items in JSON.'), 
                                 status=403)
         # Save
+    
+    cate = Category.objects(business=business).first()
+    if not cate:
+        new_cate = Category()
+        new_cate.business = business
+        new_cate.corp_sector = [corp_sector]
+        new_cate.save()
+    elif corp_sector not in cate.corp_sector:
+        cate.corp_sector.append(corp_sector)
+        cate.save()
+    # Update category information
     
     return JsonResponse(ok_response(), status=200)
     # Success

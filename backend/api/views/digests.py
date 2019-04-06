@@ -49,10 +49,12 @@ def rest_digest(request):
                             status=403)
     # Only supports GET
 
-    app_name = request.GET.get('app_name')
-    manager_name = request.GET.get('manager_name')
-    corp_sector = regularize_str(request.GET.get('corp_sector'))
-    business = regularize_str(request.GET.get('business'))
+    data = request.GET
+
+    app_name = data.get('app_name')
+    manager_name = data.get('manager_name')
+    corp_sector = regularize_str(data.get('corp_sector'))
+    business = regularize_str(data.get('business'))
 
     queryset = None
     if corp_sector and business:

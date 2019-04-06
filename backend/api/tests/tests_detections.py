@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from api.models import DetectResult
 from django.test import TestCase
-from models import DetectResult
 
 class DetectionTest(TestCase):
     def setUp(self):
@@ -11,10 +11,3 @@ class DetectionTest(TestCase):
 
     def test_duplicate(self):
         pass
-
-
-class DigestTest(TestCase):
-    pass
-
-class ReportTest(TestCase):
-    pass

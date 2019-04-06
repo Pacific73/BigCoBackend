@@ -18,10 +18,13 @@ connect(db=DB_NAME,
 
 class DetectResult(Document):
     identifier = StringField(max_length=512, required=True)
+
     app_name = StringField(max_length=512, required=True)
     manager_name = StringField(max_length=512)
     corp_sector = StringField(max_length=512)
     business = StringField(max_length=512)
+
+    last_updated = DateTimeField(required=True)
     detected = BooleanField(required=True, default=False)
     result = MapField(field=ListField(field=StringField(max_length=100)))
 
@@ -40,7 +43,3 @@ class DetectResult(Document):
             ('business', 'corp_sector')
         ]
     }
-    
-    
-
-# Create your models here.

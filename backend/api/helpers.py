@@ -5,7 +5,6 @@ def regularize_str(s):
         return s
     
     s = str(s)
-    
     words = s.split(' ')
     for i in xrange(len(words)):
         words[i] = words[i].lower().capitalize()

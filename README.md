@@ -91,7 +91,7 @@ A typical result looks like this:
 ```json
 {
 		"Security": [
-				"Management",
+      	"Management",
         "Innovation",
         "Hr"
     ],
@@ -125,7 +125,7 @@ A JSON which is in following format:
 
 ```json
 {
-		"digest":  list(records)
+  	"digest":  list(records)
 }
 ```
 
@@ -133,12 +133,12 @@ where a single record is in following format:
 
 ```json
 {
-    "app_name":     string,
-    "manager_name": string,
-    "business":     string,
-    "corp_sector":  string,
-    "detected":     boolean,
-    "last_updated": string,
+    "app_name":     "string",
+    "manager_name": "string",
+    "business":     "string",
+    "corp_sector":  "string",
+    "detected":     "boolean",
+    "last_updated": "string",
     "result":       dict(detected_results)
 }
 ```

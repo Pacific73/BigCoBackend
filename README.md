@@ -13,6 +13,12 @@ BigCo Studio backend system for Citi Innovation for BigCo Studio course.
 
 Setting parameters in `backend/backend/settings.py`.
 
+For simple testing, just use following command.
+
+```shell
+python manage.py runserver
+```
+
 ### Features to add
 
 ***
@@ -59,7 +65,7 @@ If it succeeds, following JSON will return:
 
 ```
 {
-		"status": "ok"
+    "status": "ok"
 }
 ```
 
@@ -90,8 +96,8 @@ A typical result looks like this:
 
 ```
 {
-  	"Security": [
-      	"Management",
+    "Security": [
+        "Management",
         "Innovation",
         "Hr"
     ],
@@ -125,7 +131,7 @@ A JSON which is in following format:
 
 ```
 {
-  	"digest":  list(records)
+    "digest":  list(records)
 }
 ```
 

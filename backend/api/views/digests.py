@@ -56,10 +56,14 @@ def rest_digest(request):
     business = regularize_str(data.get('business'))
     corp_sector = regularize_str(data.get('corp_sector'))
 
-    queryset = None
+    items = None
     if corp_sector and business:
-        queryset = DetectResult.objects(corp_sector=corp_sector,
-                                        business=business)
+        items = DetectResult.objects(business=business,
+                                    corp_sector=corp_sector)
+    elif business:
+        items = DetectResult.objects(business=business)
+    else:
+        items = DetectResult.objects
     # Department filtering
     
     query_term = app_name if app_name else None
@@ -67,16 +71,14 @@ def rest_digest(request):
         if query_term: query_term += ' ' + manager_name
         else:    query_term = manager_name
     # Concatenate app_name and manager_name as query_term
-    
-    if queryset:
-        queryset = queryset.search_text(query_term).order_by('$text_score')
-    else:
-        queryset = DetectResult.objects.search_text(query_term).order_by('$text_score')
+
+    if query_term:
+        items = items.search_text(query_term).order_by('$text_score')
     # Text search
 
     resp_data = dict()
     resp_data['digest'] = []
-    for res in queryset:
+    for res in items:
         item = dict()
         item['app_name'] = res.app_name
         item['manager_name'] = res.manager_name

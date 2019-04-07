@@ -44,7 +44,7 @@ POST to create new entries. PUT to update existing entries.
 
 where a typical `result` looks like this:
 
-```json
+```
 {
     "col47":    ["Ssn", "Race"],
     "nameCol":  ["Name", "Gender"]
@@ -57,15 +57,15 @@ A JSON which contains execution information.
 
 If it succeeds, following JSON will return:
 
-```json
+```
 {
-    "status": "ok"
+		"status": "ok"
 }
 ```
 
 Or an error JSON will return:
 
-```json
+```
 {
     "status": "error",
     "reason": "reason of failure"
@@ -88,9 +88,9 @@ A JSON which maps business to its corp_sector list.
 
 A typical result looks like this:
 
-```json
+```
 {
-		"Security": [
+  	"Security": [
       	"Management",
         "Innovation",
         "Hr"
@@ -123,7 +123,7 @@ This api is used for querying related DetectResult items given a query request. 
 
 A JSON which is in following format:
 
-```json
+```
 {
   	"digest":  list(records)
 }
@@ -131,21 +131,21 @@ A JSON which is in following format:
 
 where a single record is in following format:
 
-```json
+```
 {
-    "app_name":     "string",
-    "manager_name": "string",
-    "business":     "string",
-    "corp_sector":  "string",
-    "detected":     "boolean",
-    "last_updated": "string",
+    "app_name":     string,
+    "manager_name": string,
+    "business":     string,
+    "corp_sector":  string,
+    "detected":     boolean,
+    "last_updated": string,
     "result":       dict(detected_results)
 }
 ```
 
 An example of `record["result"]` can be:
 
-```json
+```
 {
     "col47":    ["Ssn", "Race"],
     "nameCol":  ["Name", "Gender"]

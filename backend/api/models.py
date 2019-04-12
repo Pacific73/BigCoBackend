@@ -40,15 +40,31 @@ class DetectResult(Document):
                 'default_language': 'english',
                 'weights': {'app_name': 1, 'manager_name': 1}
             },
-            ('business', 'corp_sector')
+            ('corp_sector', 'business')
         ]
     }
 
 class Category(Document):
-    business = StringField(max_length=512, required=True, unique=True)
-    corp_sector = ListField(field=StringField(max_length=100), required=True)
+    corp_sector = StringField(max_length=512, required=True, unique=True)
+    business = ListField(field=StringField(max_length=100), required=True)
 
     meta = {
         'collection': 'Category',
-        'indexes': ['business']
+        'indexes': ['corp_sector']
+    }
+
+class Manager(Document):
+    manager_name = StringField(max_length=512, required=True, unique=True)
+
+    meta = {
+        'collection': 'Manager',
+        'indexes': ['manager_name']
+    }
+
+class Application(Document):
+    name = StringField(max_length=512, required=True, unique=True)
+
+    meta = {
+        'collection': 'Application',
+        'indexes': ['name']
     }

@@ -18,8 +18,8 @@ text searching.
 Request JSON format:
     app_name:       string  name of the app (optional)
     manager_name:   string  name of the manager (optional)
-    business:       string  business department it belongs to (optional)
     corp_sector:    string  corporation sector it belongs to (optional)
+    business:       string  business department it belongs to (optional)
 
 Return:
     A JSON which is in following format:
@@ -30,8 +30,8 @@ Return:
     {
         "app_name":     string
         "manager_name": string
-        "business":     string
         "corp_sector":  string
+        "business":     string
         "detected":     boolean
         "last_updated": date_string
         "result":       a dict of detected columns
@@ -53,15 +53,15 @@ def rest_digest(request):
 
     app_name = data.get('app_name')
     manager_name = data.get('manager_name')
-    business = regularize_str(data.get('business'))
     corp_sector = regularize_str(data.get('corp_sector'))
+    business = regularize_str(data.get('business'))
 
     items = None
     if corp_sector and business:
-        items = DetectResult.objects(business=business,
-                                    corp_sector=corp_sector)
-    elif business:
-        items = DetectResult.objects(business=business)
+        items = DetectResult.objects(corp_sector=corp_sector,
+                                    business=business)
+    elif corp_sector:
+        items = DetectResult.objects(corp_sector=corp_sector)
     else:
         items = DetectResult.objects
     # Department filtering

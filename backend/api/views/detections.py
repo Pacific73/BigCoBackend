@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.http import JsonResponse
-from api.models import DetectResult, Category
+from api.models import DetectResult, Category, Manager, Application
 from datetime import datetime
 from api.helpers import *
 import json
@@ -123,16 +123,28 @@ def rest_detection(request):
                                 status=403)
         # Save
     
-    cate = Category.objects(business=business).first()
+    cate = Category.objects(corp_sector=corp_sector).first()
     if not cate:
         new_cate = Category()
-        new_cate.business = business
-        new_cate.corp_sector = [corp_sector]
+        new_cate.corp_sector = corp_sector
+        new_cate.business = [business]
         new_cate.save()
-    elif corp_sector not in cate.corp_sector:
-        cate.corp_sector.append(corp_sector)
+    elif business not in cate.business:
+        cate.business.append(business)
         cate.save()
     # Update category information
     
+    manager = Manager.objects(manager_name=manager_name).first()
+    if not manager:
+        new_manager = Manager()
+        new_manager.manager_name = manager_name
+        new_manager.save()
+    
+    app = Application.objects(name=app_name).first()
+    if not app:
+        app = Application()
+        app.name = app_name
+        app.save()
+
     return JsonResponse(ok_response(), status=200)
     # Success

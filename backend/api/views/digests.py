@@ -62,6 +62,7 @@ def rest_digest(request):
     corp_sector = regularize_str(data.get('corp_sector'))
     business = regularize_str(data.get('business'))
     filters = data.get('filters')
+    print corp_sector, business, filters, app_name, manager_name
     if filters is None:
         return JsonResponse(error_response('No filters.'), 
                             status=403)
@@ -73,6 +74,7 @@ def rest_digest(request):
     elif corp_sector:
         items = DetectResult.objects(corp_sector=corp_sector)
     # Department filtering
+
     
     if not items and app_name:
         items = DetectResult.objects(app_name=app_name)
@@ -84,7 +86,7 @@ def rest_digest(request):
     elif manager_name:
         items = items.objects(manager_name=manager_name)
     
-    if not items:
+    if items is None:
         items = DetectResult.objects
 
     resp_data = dict()

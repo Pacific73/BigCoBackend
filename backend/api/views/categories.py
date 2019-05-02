@@ -42,18 +42,38 @@ def rest_category(request):
 
     queryset = Category.objects().all()
     
-    resp_data['corp_sectors'] = dict()
+    resp_data['corpSector'] = dict()
     for category in queryset:
-        resp_data['corp_sectors'][category.corp_sector] = category.business
+        corp_key = category.corp_sector.lower().replace(' ', '_')
+        resp_data['corpSector'][corp_key] = dict()
+        items = resp_data['corpSector'][corp_key]
+        items['label'] = category.corp_sector
+        items['business'] = list()
+        for business_name in category.business:
+            business_value = business_name.lower().replace(' ', '_')
+            items['business'].append({'value': business_value, 'label': business_name})
     
     managers = Manager.objects().all()
-    resp_data['manager_names'] = []
+    resp_data['appManager'] = []
     for manager in managers:
-        resp_data['manager_names'].append(manager.manager_name)
+        manager_value = manager.manager_name.lower().replace(' ', '_')
+        resp_data['appManager'].append({'value': manager_value, 'label': manager.manager_name})
     
     apps = Application.objects().all()
-    resp_data['app_names'] = []
+    resp_data['appName'] = []
     for app in apps:
-        resp_data['app_names'].append(app.name)
+        app_name_value = app.name.lower().replace(' ', '_')
+        resp_data['appName'].append({'value': app_name_value, 'label': app.name})
+    
+    resp_data['filters'] = [
+        { 'value': 'name', 'label': 'Name' },
+        { 'value': 'gender', 'label': 'Gender' },
+        { 'value': 'race', 'label': 'Race' },
+        { 'value': 'marital', 'label': 'Marital' },
+        { 'value': 'address', 'label': 'Address' },
+        { 'value': 'age', 'label': 'Age' },
+        { 'value': 'ssn', 'label': 'SSN' },
+        { 'value': 'ip_address', 'label': 'IP Address' },
+    ]
     
     return JsonResponse(resp_data, status=200)

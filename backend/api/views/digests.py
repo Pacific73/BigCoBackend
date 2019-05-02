@@ -4,11 +4,12 @@ from __future__ import unicode_literals
 from django.http import JsonResponse
 from api.models import DetectResult
 from api.helpers import *
+import json
 
 
 '''
 /api/digests
-Supported HTTP types -> [GET]
+Supported HTTP types -> [POST]
 
 This api is used for querying related DetectResult items given
 a query request. Function uses `corp_sector` and `business` to
@@ -16,10 +17,11 @@ do AND filtering and uses `app_name` and `manager_name` to do
 text searching.
 
 Request JSON format:
-    app_name:       string  name of the app (optional)
-    manager_name:   string  name of the manager (optional)
-    corp_sector:    string  corporation sector it belongs to (optional)
-    business:       string  business department it belongs to (optional)
+    app_name:       string              name of the app (optional)
+    manager_name:   string              name of the manager (optional)
+    corp_sector:    string              corporation sector it belongs to (optional)
+    business:       string              business department it belongs to (optional)
+    filters:        a list of strings   filtering list
 
 Return:
     A JSON which is in following format:
@@ -32,7 +34,6 @@ Return:
         "manager_name": string
         "corp_sector":  string
         "business":     string
-        "detected":     boolean
         "last_updated": date_string
         "result":       a dict of detected columns
     }
@@ -44,17 +45,26 @@ Return:
 '''
 def rest_digest(request):
 
-    if request.method != 'GET':
-        return JsonResponse(error_response('Only supports GET.'), 
+    if request.method != 'POST':
+        return JsonResponse(error_response('Only supports POST.'), 
                             status=403)
-    # Only supports GET
+    # Only supports POST
 
-    data = request.GET
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception as e:
+        print e
+        return JsonResponse(error_response('Invalid JSON format.'), 
+                            status=403)
 
     app_name = data.get('app_name')
     manager_name = data.get('manager_name')
     corp_sector = regularize_str(data.get('corp_sector'))
     business = regularize_str(data.get('business'))
+    filters = data.get('filters')
+    if filters is None:
+        return JsonResponse(error_response('No filters.'), 
+                            status=403)
 
     items = None
     if corp_sector and business:
@@ -62,32 +72,47 @@ def rest_digest(request):
                                     business=business)
     elif corp_sector:
         items = DetectResult.objects(corp_sector=corp_sector)
-    else:
-        items = DetectResult.objects
     # Department filtering
     
-    query_term = app_name if app_name else None
-    if manager_name:
-        if query_term: query_term += ' ' + manager_name
-        else:    query_term = manager_name
-    # Concatenate app_name and manager_name as query_term
-
-    if query_term:
-        items = items.search_text(query_term).order_by('$text_score')
-    # Text search
+    if not items and app_name:
+        items = DetectResult.objects(app_name=app_name)
+    elif app_name:
+        items = items.objects(app_name=app_name)
+    
+    if not items and manager_name:
+        items = DetectResult.objects(manager_name=manager_name)
+    elif manager_name:
+        items = items.objects(manager_name=manager_name)
+    
+    if not items:
+        items = DetectResult.objects
 
     resp_data = dict()
     resp_data['digest'] = []
     for res in items:
         item = dict()
-        item['app_name'] = res.app_name
-        item['manager_name'] = res.manager_name
-        item['corp_sector'] = res.corp_sector
-        item['business'] = res.business
-        item['detected'] = res.detected
-        item['result'] = res.result
-        item['last_updated'] = res.last_updated
+        item['application'] = res.app_name
+        item['lastUpdated'] = str(res.last_updated)[:10]
+
+        cluster_result = cluster(res.result, filters)
+        for filter in filters:
+            item[filter] = reorganize(cluster_result, filter)
+        
         resp_data['digest'].append(item)
     # Load info into JSON
     
     return JsonResponse(resp_data, status=200)
+
+def cluster(result, filters):
+    return {'col1' : [['Name', 0.80], ['Address', 0.55]],
+            'col47': [['Ssn', 0.90]]
+            }
+
+def reorganize(result, filter):
+    ret_list = []
+    for key in result.keys():
+        answers = result[key]
+        for answer in answers:
+            if regularize_str(answer[0]) != regularize_str(filter): continue
+            ret_list.append({'column': key, 'confidence': int(answer[1] * 100)})
+    return ret_list

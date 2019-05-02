@@ -21,13 +21,12 @@ Request JSON format:
     manager_name:   string          name of the manager
     corp_sector:    string          corporation sector it belongs to
     business:       string          business department it belongs to
-    detected:       boolean         whether this app contains PII
     result:         dict of records detection results
 
     where a typical `result` looks like this:
     {
-        "col47":    ["Ssn", "Race"],
-        "nameCol":  ["Name", "Gender"]
+        "col47":    [1.0, 2.5, 3.6],
+        "nameCol":  [5.9, 6.0, 3.0]
     }
 
 Return:
@@ -54,6 +53,7 @@ def rest_detection(request):
         data = json.loads(request.body.decode('utf-8'))
     except Exception as e:
         print e
+        print request.body
         return JsonResponse(error_response('Invalid JSON format.'), 
                             status=403)
     # Parse JSON data
@@ -62,22 +62,27 @@ def rest_detection(request):
     manager_name = regularize_str(data.get('manager_name'))
     corp_sector = regularize_str(data.get('corp_sector'))
     business = regularize_str(data.get('business'))
-    identifier = get_identifier([app_name, manager_name, corp_sector, business])
     # Get regularized strings and identifier
 
     last_updated = datetime.now()
-    detected = data.get('detected')
-    result = data.get('result', [])
+    result = data.get('result', dict())
     # Get detected and result
 
+
+    if len(result) == 0:
+        return JsonResponse(error_response('No detection results in JSON.'), 
+                            status=403)
+    
+    vec_len = len(result[result.keys()[0]])
     for col in result.keys():
-        for idx, pii_name in enumerate(result[col]):
-            result[col][idx] = regularize_str(pii_name)
-    # regularize
+        if len(result[col]) != vec_len:
+            return JsonResponse(error_response('Lengths of vectors aren\'t the same'), 
+                            status=403)
     
     if request.method == 'POST':
 
-        items = DetectResult.objects(identifier=identifier)
+        items = DetectResult.objects(app_name=app_name, manager_name=manager_name,
+                                     corp_sector=corp_sector, business=business)
         if items.count() != 0:
             return JsonResponse(
                 error_response('Record already exists. You should use PUT.'))
@@ -88,9 +93,7 @@ def rest_detection(request):
         res.manager_name = manager_name
         res.corp_sector = corp_sector
         res.business = business
-        res.identifier = identifier
-        res.detected = detected
-        res.result = result if detected else []
+        res.result = result 
         res.last_updated = last_updated
         # New instance
         
@@ -103,15 +106,15 @@ def rest_detection(request):
         # Save
 
     elif request.method == 'PUT':
-        items = DetectResult.objects(identifier=identifier)
+        items = DetectResult.objects(app_name=app_name, manager_name=manager_name,
+                                     corp_sector=corp_sector, business=business)
         if items.count() == 0:
             return JsonResponse(
                 error_response('Record doesn\'t exists You should use POST.'))
         # Record should exist in the database
         
         res = items.first()
-        res.detected = detected
-        res.result = result if detected else []
+        res.result = result
         res.last_updated = last_updated
         # Update detected and result
 

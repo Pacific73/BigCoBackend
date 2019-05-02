@@ -17,7 +17,6 @@ connect(db=DB_NAME,
 #         password=DB_PASSWORD)
 
 class DetectResult(Document):
-    identifier = StringField(max_length=512, required=True)
 
     app_name = StringField(max_length=512, required=True)
     manager_name = StringField(max_length=512)
@@ -25,22 +24,15 @@ class DetectResult(Document):
     business = StringField(max_length=512)
 
     last_updated = DateTimeField(required=True)
-    detected = BooleanField(required=True, default=False)
-    result = MapField(field=ListField(field=StringField(max_length=100)))
+    result = MapField(field=ListField(field=FloatField()))
 
     meta = {
         'collection': 'DetectResult',
         'indexes': [
-            'identifier',
-            { 
-                'fields': [
-                    '$app_name',
-                    '$manager_name'
-                ],
-                'default_language': 'english',
-                'weights': {'app_name': 1, 'manager_name': 1}
-            },
-            ('corp_sector', 'business')
+            'app_name',
+            'manager_name',
+            'corp_sector', 
+            'business'
         ]
     }
 

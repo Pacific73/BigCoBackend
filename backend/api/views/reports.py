@@ -81,10 +81,10 @@ def rest_report(request):
         item['business'] = res.business
         item['last_updated'] = str(res.last_updated)[:10]
 
-        item['result'] = cluster(res.result, filters)
-        # cluster_result = cluster(res.result, filters)
-        # for filter in filters:
-        #     item[filter] = reorganize(cluster_result, filter)
+        # item['result'] = cluster(res.result, filters)
+        cluster_result = cluster(res.result, filters)
+        for filter in filters:
+            item[filter] = reorganize(cluster_result, filter)
         
         resp_data['digest'].append(item)
     
@@ -103,22 +103,22 @@ def rest_report(request):
     sheet.merge_range(0, 0, 0, 6, 'Citi PII Report', title_format)
 
     sheet.set_column(0, 4, 20)
-    sheet.set_column(5, 5, 50)
-    sheet.set_column(6, 6, 30)
 
     sheet.write(1, 0, 'App Name')
     sheet.write(1, 1, 'Manager\'s Name')
     sheet.write(1, 2, 'Corp Sector')
     sheet.write(1, 3, 'Business')
-    sheet.write(1, 4, 'Detect Result')
-    sheet.write(1, 5, 'Last Updated')
+    sheet.write(1, 4, 'Last Updated')
+    for idx, filter in enumerate(filters):
+        sheet.write(1, 5+idx, filter)
     for idx, app in enumerate(resp_data['digest']):
         sheet.write(idx+2, 0, app['app_name'])
         sheet.write(idx+2, 1, app['manager_name'])
         sheet.write(idx+2, 2, app['corp_sector'])
         sheet.write(idx+2, 3, app['business'])
-        sheet.write(idx+2, 4, json.dumps(app['result']))
-        sheet.write(idx+2, 5, str(app['last_updated']))
+        sheet.write(idx+2, 4, str(app['last_updated']))
+        for j, filter in enumerate(filters):
+            sheet.write(idx+2, 5+j, str(app[filter]) + '%')
     book.close()
     # Generate xlsx file
 

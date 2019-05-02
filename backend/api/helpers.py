@@ -31,10 +31,11 @@ def cluster(result, filters):
             }
 
 def reorganize(result, filter):
-    ret_list = []
+    score = 0
     for key in result.keys():
         answers = result[key]
         for answer in answers:
             if regularize_str(answer[0]) != regularize_str(filter): continue
-            ret_list.append({'column': key, 'confidence': int(answer[1] * 100)})
-    return ret_list
+            col_score = int(answer[1] * 100)
+            score = max(score, col_score)
+    return score

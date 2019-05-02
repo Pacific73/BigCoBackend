@@ -62,7 +62,7 @@ def rest_digest(request):
     corp_sector = regularize_str(data.get('corp_sector'))
     business = regularize_str(data.get('business'))
     filters = data.get('filters')
-    print corp_sector, business, filters, app_name, manager_name
+
     if filters is None:
         return JsonResponse(error_response('No filters.'), 
                             status=403)
@@ -79,12 +79,12 @@ def rest_digest(request):
     if not items and app_name:
         items = DetectResult.objects(app_name=app_name)
     elif app_name:
-        items = items.objects(app_name=app_name)
+        items = items.filter(app_name=app_name)
     
     if not items and manager_name:
         items = DetectResult.objects(manager_name=manager_name)
     elif manager_name:
-        items = items.objects(manager_name=manager_name)
+        items = items.filter(manager_name=manager_name)
     
     if items is None:
         items = DetectResult.objects
@@ -105,16 +105,4 @@ def rest_digest(request):
     
     return JsonResponse(resp_data, status=200)
 
-def cluster(result, filters):
-    return {'col1' : [['Name', 0.80], ['Address', 0.55]],
-            'col47': [['Ssn', 0.90]]
-            }
 
-def reorganize(result, filter):
-    ret_list = []
-    for key in result.keys():
-        answers = result[key]
-        for answer in answers:
-            if regularize_str(answer[0]) != regularize_str(filter): continue
-            ret_list.append({'column': key, 'confidence': int(answer[1] * 100)})
-    return ret_list

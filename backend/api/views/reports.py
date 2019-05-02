@@ -28,47 +28,67 @@ Return:
     An xlsx file.
 '''
 def rest_report(request):
-    if request.method != 'GET':
-        return JsonResponse(error_response('Only supports GET.'), 
+    if request.method != 'POST':
+        return JsonResponse(error_response('Only supports POST.'), 
                             status=403)
-    # Only supports GET
+    # Only supports POST
 
-    app_name = request.GET.get('app_name')
-    manager_name = request.GET.get('manager_name')
-    corp_sector = regularize_str(request.GET.get('corp_sector'))
-    business = regularize_str(request.GET.get('business'))
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception as e:
+        print e
+        return JsonResponse(error_response('Invalid JSON format.'), 
+                            status=403)
 
-    queryset = None
+    app_name = data.get('app_name')
+    manager_name = data.get('manager_name')
+    corp_sector = regularize_str(data.get('corp_sector'))
+    business = regularize_str(data.get('business'))
+    filters = data.get('filters')
+
+    if filters is None:
+        return JsonResponse(error_response('No filters.'), 
+                            status=403)
+    items = None
     if corp_sector and business:
-        queryset = DetectResult.objects(corp_sector=corp_sector,
-                                        business=business)
+        items = DetectResult.objects(corp_sector=corp_sector,
+                                    business=business)
+    elif corp_sector:
+        items = DetectResult.objects(corp_sector=corp_sector)
     # Department filtering
+
     
-    query_term = app_name if app_name else None
-    if manager_name:
-        if query_term: query_term += ' ' + manager_name
-        else:    query_term = manager_name
-    # Concatenate app_name and manager_name as query_term
+    if not items and app_name:
+        items = DetectResult.objects(app_name=app_name)
+    elif app_name:
+        items = items.filter(app_name=app_name)
     
-    if queryset:
-        queryset = queryset.search_text(query_term).order_by('$text_score')
-    else:
-        queryset = DetectResult.objects.search_text(query_term).order_by('$text_score')
-    # Text search
+    if not items and manager_name:
+        items = DetectResult.objects(manager_name=manager_name)
+    elif manager_name:
+        items = items.filter(manager_name=manager_name)
+    
+    if items is None:
+        items = DetectResult.objects
 
     resp_data = dict()
     resp_data['digest'] = []
-    for res in queryset:
+    for res in items:
         item = dict()
         item['app_name'] = res.app_name
         item['manager_name'] = res.manager_name
         item['corp_sector'] = res.corp_sector
         item['business'] = res.business
-        item['detected'] = res.detected
-        item['result'] = res.result
-        item['last_updated'] = res.last_updated
+        item['last_updated'] = str(res.last_updated)[:10]
+
+        item['result'] = cluster(res.result, filters)
+        # cluster_result = cluster(res.result, filters)
+        # for filter in filters:
+        #     item[filter] = reorganize(cluster_result, filter)
+        
         resp_data['digest'].append(item)
-    # Load info into JSON
+    
+    print resp_data
 
     output = io.BytesIO()
     book = xlsxwriter.Workbook(output)
@@ -90,17 +110,15 @@ def rest_report(request):
     sheet.write(1, 1, 'Manager\'s Name')
     sheet.write(1, 2, 'Corp Sector')
     sheet.write(1, 3, 'Business')
-    sheet.write(1, 4, 'Detected')
-    sheet.write(1, 5, 'Detect Result')
-    sheet.write(1, 6, 'Last Updated')
+    sheet.write(1, 4, 'Detect Result')
+    sheet.write(1, 5, 'Last Updated')
     for idx, app in enumerate(resp_data['digest']):
         sheet.write(idx+2, 0, app['app_name'])
         sheet.write(idx+2, 1, app['manager_name'])
         sheet.write(idx+2, 2, app['corp_sector'])
         sheet.write(idx+2, 3, app['business'])
-        sheet.write(idx+2, 4, str(app['detected']))
-        sheet.write(idx+2, 5, json.dumps(app['result']))
-        sheet.write(idx+2, 6, str(app['last_updated']))
+        sheet.write(idx+2, 4, json.dumps(app['result']))
+        sheet.write(idx+2, 5, str(app['last_updated']))
     book.close()
     # Generate xlsx file
 

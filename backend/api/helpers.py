@@ -1,3 +1,5 @@
+import random
+
 def regularize_str(s):
     if not s:
         return None
@@ -26,9 +28,29 @@ def get_identifier(strs):
     return identifier
 
 def cluster(result, filters):
-    return {'col1' : [['Name', 0.80], ['Address', 0.55]],
-            'col47': [['Ssn', 0.90]]
-            }
+    l = [
+        {
+            'col1' : [['name', 0.80], ['address', 0.55], ['gender', 0.23]],
+            'col47': [['ssn', 0.90], ['race', 0.16]]
+        },
+        {
+            'Name' : [['name', 0.98], ['address', 0.50], ['gender', 0.2]],
+            'Continent23': [['marital', 0.68], ['address', 0.67]]
+        },
+        {
+            'fn' : [['name', 0.5], ['age', 0.19]],
+            'cool' : [['ip_address', 0.99], ['name', 0.05]]
+        },
+        {
+            'addr': [['address', 0.87], ['ip_address', 0.82]],
+            'number': [['ssn', 0.96]]
+        },
+        {
+            'ssn': [['ssn', 1.0], ['age', 0.56]],
+            'sex': [['gender', 1.0], ['marital', 0.45]]
+        }
+    ]
+    return random.choice(l)
 
 def reorganize(result, filter):
     score = 0

@@ -25,7 +25,7 @@ SECRET_KEY = '5t5ve8l@#ie9pi*=#u^-595g#i$w#3l#!-*lfwd_f@8aiivw0o'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['bigco001.eastus.cloudapp.azure.com:8000']
 
 
 # Application definition

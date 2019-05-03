@@ -13,6 +13,18 @@ def regularize_str(s):
     
     return ' '.join(words)
 
+def rev_regularize_str(s):
+    if not s:
+        return None
+    if isinstance(s, str) and len(s) == 0:
+        return s
+    
+    s = str(s)
+    words = s.split('_')
+    for i in xrange(len(words)):
+        words[i] = words[i].lower().capitalize()
+    return ' '.join(words)
+
 def ok_response():
     return {'status': 'ok'}
 

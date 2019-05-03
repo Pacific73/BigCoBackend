@@ -40,10 +40,10 @@ def rest_report(request):
         return JsonResponse(error_response('Invalid JSON format.'), 
                             status=403)
 
-    app_name = data.get('app_name')
-    manager_name = data.get('manager_name')
-    corp_sector = regularize_str(data.get('corp_sector'))
-    business = regularize_str(data.get('business'))
+    app_name = rev_regularize_str(data.get('app_name'))
+    manager_name = rev_regularize_str(data.get('manager_name'))
+    corp_sector = rev_regularize_str(data.get('corp_sector'))
+    business = rev_regularize_str(data.get('business'))
     filters = data.get('filters')
 
     if filters is None:
